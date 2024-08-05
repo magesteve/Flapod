@@ -1,0 +1,25 @@
+name: flapod
+description: A Flutter app to display NASA's Astronomy Picture of the Day.
+
+publish_to: 'none' # Remove this line if you are publishing to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^0.13.3
+  url_launcher: ^6.0.9
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/FAQ.txt
