@@ -129,16 +129,9 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 20),
             isVideo
-                ? Column(
-                    children: [
-                      Text('Video available, click the View on NASA APOD button',
-                          textAlign: TextAlign.center),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _launchURL,
-                        child: Text('View on NASA APOD'),
-                      ),
-                    ],
+                ? Text(
+                    'Video available, click the View on NASA APOD button',
+                    textAlign: TextAlign.center,
                   )
                 : Image.network(apodUrl),
             SizedBox(height: 20),
