@@ -1,25 +1,25 @@
 name: flapod
-description: A Flutter app to display NASA's Astronomy Picture of the Day.
+description: A simple Flutter app to display NASA's Astronomy Picture of the Day (APOD) with an FAQ section that supports clickable URLs.
 
-publish_to: 'none' # Remove this line if you are publishing to pub.dev
+# The following line prevents the package from being accidentally published to pub.dev using `flutter pub publish`.
+publish_to: 'none' 
 
+# The current version of the app
 version: 1.0.0+1
 
+# The Dart SDK constraint
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.17.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.3
-  url_launcher: ^6.0.9
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
+  url_launcher: ^6.1.5
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/FAQ.txt
+    - assets/key.txt
