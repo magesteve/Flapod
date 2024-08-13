@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 
 void main() {
-  runApp(const Flapod());
+  runApp(FlapodApp());
 }
 
-class Flapod extends StatelessWidget {
-  const Flapod({Key? key}) : super(key: key);
-
+class FlapodApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -17,157 +16,232 @@ class Flapod extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const ApodPage(),
+      home: FlapodHomePage(),
     );
   }
 }
 
-class ApodPage extends StatefulWidget {
-  const ApodPage({Key? key}) : super(key: key);
-
+class FlapodHomePage extends StatefulWidget {
   @override
-  _ApodPageState createState() => _ApodPageState();
+  _FlapodHomePageState createState() => _FlapodHomePageState();
 }
 
-class _ApodPageState extends State<ApodPage> {
-  final String apiKey = 'Vy7VIaEuCnDhsMTeVPRe9MJZgGuBfD73P7SMXLb2';
-  late Future<Map<String, dynamic>> _apodData;
+class _FlapodHomePageState extends State<FlapodHomePage> {
+  String apiKey = '';
 
   @override
   void initState() {
     super.initState();
-    _apodData = fetchApodData();
+    _loadApiKey();
+  }
+
+  Future<void> _loadApiKey() async {
+    String key = await DefaultAssetBundle.of(context).loadString('assets/key.txt');
+    setState(() {
+      apiKey = key.trim();
+    });
   }
 
   Future<Map<String, dynamic>> fetchApodData() async {
     final response = await http.get(Uri.parse(
         'https://api.nasa.gov/planetary/apod?api_key=$apiKey'));
-
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to load APOD');
+      throw Exception('Failed to load APOD data');
     }
   }
 
-  Future<List<String>> loadFaq() async {
-    final faqData = await DefaultAssetBundle.of(context).loadString('assets/FAQ.txt');
-    return faqData.split('\n');
+  void _launchURL(String url) async {
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  Future<List<TextSpan>> _loadFaq() async {
+    String data = await DefaultAssetBundle.of(context).loadString("assets/FAQ.txt");
+    List<String> lines = LineSplitter().convert(data);
+    if (lines.length % 2 != 0) {
+      lines.removeLast();
+    }
+
+    List<TextSpan> spans = [];
+    for (String line in lines) {
+      spans.add(_buildTextSpan(line));
+      spans.add(TextSpan(text: '\n'));
+    }
+
+    return spans;
+  }
+
+  TextSpan _buildTextSpan(String text) {
+    final urlRegExp = RegExp(r"(https?:\/\/[^\s]+)");
+    final matches = urlRegExp.allMatches(text);
+
+    if (matches.isEmpty) {
+      return TextSpan(text: text);
+    }
+
+    List<TextSpan> children = [];
+    int lastMatchEnd = 0;
+
+    for (var match in matches) {
+      if (match.start > lastMatchEnd) {
+        children.add(TextSpan(text: text.substring(lastMatchEnd, match.start)));
+      }
+
+      final url = text.substring(match.start, match.end);
+      children.add(
+        TextSpan(
+          text: url,
+          style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              _launchURL(url);
+            },
+        ),
+      );
+
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      children.add(TextSpan(text: text.substring(lastMatchEnd)));
+    }
+
+    return TextSpan(children: children);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flapod'),
+        title: Text('Flapod'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.help_outline),
+            icon: Icon(Icons.help_outline),
             onPressed: () async {
-              final faq = await loadFaq();
+              List<TextSpan> faq = await _loadFaq();
               showDialog(
                 context: context,
-                builder: (context) {
+                builder: (BuildContext context) {
                   return AlertDialog(
-                    title: const Text('FAQ'),
+                    title: Text("FAQ"),
                     content: SingleChildScrollView(
-                      child: ListBody(
-                        children: faq.asMap().entries.where((entry) => entry.key % 2 == 0).map((entry) {
-                          int index = entry.key;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Q: ${faq[index]}'),
-                              if (index + 1 < faq.length) Text('A: ${faq[index + 1]}'),
-                              const SizedBox(height: 10),
-                            ],
-                          );
-                        }).toList(),
+                      child: RichText(
+                        text: TextSpan(
+                          style: TextStyle(color: Colors.black),
+                          children: faq,
+                        ),
                       ),
                     ),
-                    actions: [
+                    actions: <Widget>[
                       TextButton(
+                        child: Text("Close"),
                         onPressed: () {
                           Navigator.of(context).pop();
                         },
-                        child: const Text('Close'),
                       ),
                     ],
                   );
                 },
               );
             },
-          )
+          ),
         ],
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _apodData,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(
-              child: Text(
-                'Unable to load image today',
-                style: TextStyle(color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-            );
-          } else if (snapshot.hasData) {
-            final data = snapshot.data!;
-            final mediaType = data['media_type'];
-            final url = data['url'];
-            final title = data['title'];
-            final explanation = data['explanation'];
-
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  if (mediaType == 'image')
-                    Image.network(url)
-                  else if (mediaType == 'video')
-                    const Center(
-                      child: Text(
-                        'Video available\nClick the View on NASA APOD button',
-                        style: TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
+      body: apiKey.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : FutureBuilder<Map<String, dynamic>>(
+              future: fetchApodData(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      "Unable to load image today",
+                      style: TextStyle(color: Colors.red, fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                } else if (snapshot.hasData) {
+                  var data = snapshot.data!;
+                  if (data['media_type'] == 'video') {
+                    return SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(height: 20),
+                          Text(data['title'], style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text(data['date']),
+                          SizedBox(height: 20),
+                          Text(
+                            "Video available",
+                            style: TextStyle(color: Colors.red, fontSize: 18),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            "Click the View on NASA APOD button",
+                            style: TextStyle(color: Colors.red, fontSize: 18),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(data['explanation']),
+                          ),
+                          TextButton(
+                            onPressed: () => _launchURL(data['url']),
+                            child: Text("View on NASA APOD"),
+                            style: TextButton.styleFrom(
+                              side: BorderSide(color: Colors.blue),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  const SizedBox(height: 10),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Text(explanation),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  OutlinedButton(
-                    onPressed: () async {
-                      final uri = Uri.parse(data['hdurl'] ?? url);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      } else {
-                        throw 'Could not launch $uri';
-                      }
-                    },
-                    child: const Text('View on NASA APOD'),
-                  ),
-                ],
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
+                    );
+                  } else {
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          SizedBox(height: 20),
+                          Text(data['title'], style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          Text(data['date']),
+                          SizedBox(height: 20),
+                          Container(
+                            width: MediaQuery.of(context).size.width,
+                            child: Image.network(
+                              data['url'],
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(data['explanation']),
+                          ),
+                          TextButton(
+                            onPressed: () => _launchURL(data['url']),
+                            child: Text("View on NASA APOD"),
+                            style: TextButton.styleFrom(
+                              side: BorderSide(color: Colors.blue),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                } else {
+                  return Center(child: Text('No data'));
+                }
+              },
+            ),
     );
   }
 }
