@@ -1,10 +1,12 @@
 What is Flapod?
-Flapod stands for Flutter Another Picture of the Day app, an experiment in the use  of Flutter, an open-source UI software development kit created by Google. Fapod was created to be an example of how to create a helpful app on multiple platforms (iOS, MacOS, Android, VisionOS).
+Flapod stands for Flutter Another Picture of the Day app, an experiment in the use  of Flutter, an open-source UI software development kit created by Google. Fapod was created to be an example of how to create a helpful app on multiple platforms (iOS, padOS, MacOS, Android, Windows, VisionOS).
 Who created Fapod?
-Steve Sheets, a long-time developer of desktop and mobile applications, created Fapod. As much as Fapod was an experiment in Flutter, it was also an experiment in AI developer programming. ChatGPT generated every line of Flutter code.  The source code of Flapod can be found on GitHub.
+Steve Sheets, a long-time developer of desktop and mobile applications, created Fapod. As much as Fapod was an experiment in Flutter, it was also an experiment in AI developer programming. ChatGPT generated every line of Flutter code.  The source code of Flapod can be found on GitHub at the https://github.com/magesteve/flapod page.
+What is ChatGPT?
+ChatGPT is an advanced language model developed by OpenAI, based on the GPT (Generative Pre-trained Transformer) architecture. It's designed to understand and generate human-like text based on the input it receives. Yes, ChatGPT generated this reply. Have fun with it as the http://chatgpt.com site.
+What is Flutter?
+Flutter is an open-source UI software development toolkit created by Google. It is used to build natively compiled applications for mobile (iOS, Android), web, and desktop (Windows, macOS, Linux) from a single codebase.
 Where do the photos and videos of Fapod come from?
-Fapod displays the data from NASA's APOD website.
-What is APOD?
-APOD stands for Astronomy Picture of the Day, a daily image or photograph of our universe.
-Where do the images come from?
-The images are provided by NASA and other space agencies around the world.
+Fapod displays the data from NASA's APOD website.  APOD, or Astronomy Picture of the Day, is a website and online resource that features a new image or photograph of the universe every day, along with a brief explanation written by a professional astronomer. APOD can be accessed at https://apod.nasa.gov/apod/ or by clicking on the "View on NASA APOD" button.
+What is next?
+The Sky is the limit!
